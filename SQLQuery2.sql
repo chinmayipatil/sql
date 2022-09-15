@@ -184,3 +184,128 @@ on f.flight_id=t.flight_id
 where f.airline_name='abc'
 group by f.flight_id,f.from_location,f.to_location having count(t.ticket_id)>=1
 order by flight_id
+
+--11
+select * from air_flight_details
+
+
+SELECT FLIGHT_ID,COUNT(fdept_date) AS NO_OF_SERVICES,SUM(PRICE) as TOTAL_PRICE
+FROM air_flight_details
+GROUP BY FLIGHT_ID ORDER BY TOTAL_PRICE DESC,FLIGHT_ID DESC;
+
+--12
+SELECT  flight_id,fdept_date,COUNT(ticket_id) AS NO_OF_PASSENGERS FROM air_ticket_info
+GROUP BY flight_id,fdept_date ORDER BY flight_id,fdept_date
+
+--13
+SELECT PROFILE_ID FROM air_ticket_info 
+GROUP BY PROFILE_ID HAVING COUNT(TICKET_ID) = 
+(SELECT MIN(C) FROM ( SELECT COUNT(TICKET_ID) AS C 
+FROM air_ticket_info GROUP BY PROFILE_ID)t 
+) ORDER BY PROFILE_ID
+
+--14
+SELECT DISTINCT a.PROFILE_ID,a.f_name,a.mblno,a.EMAIL_ID FROM air_passenger_profile a JOIN air_ticket_info b 
+ON a.PROFILE_ID = b.PROFILE_ID JOIN air_flight c ON b.FLIGHT_ID = c.FLIGHT_ID
+WHERE c.FROM_LOCATION='Hyderabad' and c.TO_LOCATION='Chennai' ORDER BY a.PROFILE_ID;
+
+
+--16
+SELECT a.profile_id,a.f_name,a.address
+AS BASE_LOCATION,COUNT(b.TICKET_ID) AS NO_OF_TICEKTS
+FROM air_passenger_profile a JOIN air_ticket_info b ON a.PROFILE_ID = b.PROFILE_ID 
+WHERE a.address like '%Kochi%' 
+GROUP BY a.PROFILE_ID,a.f_name,a.address ORDER BY a.f_name
+
+--17
+SELECT a.FLIGHT_ID,a.FROM_LOCATION,a.TO_LOCATION,COUNT(b.fdept_date) 
+AS NO_OF_SERVICES 
+FROM air_flight a JOIN air_flight_details b ON a.FLIGHT_ID = b.FLIGHT_ID
+WHERE MONTH(B.fdept_date)=5 GROUP BY a.FLIGHT_ID,a.FROM_LOCATION,
+a.TO_LOCATION ORDER BY FLIGHT_ID;
+
+--18a
+SELECT PROFILE_ID,l_name,mblno,EMAIL_ID FROM air_passenger_profile 
+WHERE ADDRESS LIKE '%Chennai%' ORDER BY PROFILE_ID;
+
+--18b
+SELECT COUNT(FLIGHT_ID) AS FLIGHT_COUNT FROM air_flight 
+WHERE dept_time BETWEEN '06:00:00' AND '18:00:00' AND FROM_LOCATION='Chennai';
+
+--19
+SELECT DISTINCT a.PROFILE_ID,a.f_name,a.EMAIL_ID,a.mblno FROM air_passenger_profile a 
+join air_ticket_info b ON a.PROFILE_ID = b.PROFILE_ID
+WHERE b.FLIGHT_ID='3148' ORDER BY a.f_name;
+
+--20
+SELECT DISTINCT FLIGHT_ID,FROM_LOCATION,TO_LOCATION,dept_time,
+CASE WHEN dept_time BETWEEN '05:00:01.0000000' AND '12:00:00.0000000' THEN 'Morning'
+	 WHEN dept_time BETWEEN '12:00:01.0000000' AND '18:00:00.0000000' THEN 'Afternoon'
+	 WHEN dept_time BETWEEN '18:00:01.0000000' AND '23:59:59.0000000' THEN 'Evening'
+	 WHEN dept_time BETWEEN '00:00:01.0000000' AND '05:00:00.0000000' THEN 'Night' 
+	 ELSE 'n/a' end 
+as'TIME_OF_SERVICE'
+FROM air_flight ORDER BY FLIGHT_ID;
+
+--21
+SELECT FLIGHT_ID , fdept_date,
+CASE WHEN PRICE < 3000 THEN 'AIR PASSENGER'
+	WHEN PRICE > 3000 AND PRICE < 4000 THEN 'AIR BUS'
+	WHEN PRICE > 4000 THEN 'EXECUTIVE PASSENGER'
+	ELSE 'NONE'
+	END AS 'FLIGHT TYPE'
+	FROM air_flight_details
+	GROUP BY FLIGHT_ID, fdept_date, PRICE
+ORDER BY FLIGHT_ID, fdept_date
+
+
+--22
+SELECT * FROM air_credit_card_details
+SELECT ctype ,COUNT(ctype) AS 'CARD_COUNT' FROM 
+air_credit_card_details GROUP BY ctype
+
+--23
+SELECT SUBSTRING(PROFILE_ID, 4,6) AS 'SERIAL_NO' ,f_name, 
+mblno,EMAIL_ID FROM air_passenger_profile 
+WHERE EMAIL_ID LIKE ('%GMAIL.COM%') ORDER BY f_name 
+
+--25
+SELECT FROM_LOCATION, COUNT(FROM_LOCATION) AS 'NO_OF_FLIGHTS' FROM air_flight
+GROUP BY FROM_LOCATION
+
+
+--26(NOT ACCURATE)
+SELECT A.FLIGHT_ID, B.FROM_LOCATION, B.TO_LOCATION, A.fdept_date, 
+COUNT(TICKET_ID) AS 'NO_OF_PASSENGERS' 
+FROM air_ticket_info A JOIN air_flight B
+ON A.FLIGHT_ID = B.FLIGHT_ID 
+WHERE STATUS = 'BOOKED'
+GROUP BY A.FLIGHT_ID, A.fdept_date,B.from_location,B.to_location
+
+
+--27
+SELECT B.FLIGHT_ID, B.FROM_LOCATION, B.TO_LOCATION, B.tseats, 
+(B.tseats - A.AVAILABLE_SEATS) AS 'NO_OF_SEATS_BOOKED' 
+FROM air_flight_details A JOIN air_flight B 
+ON A.FLIGHT_ID = B.FLIGHT_ID 
+WHERE A.AVAILABLE_SEATS < 0.1*B.tseats
+
+--28
+SELECT * FROM air_flight
+SELECT A.FLIGHT_ID, B.fdept_date, A.FROM_LOCATION, A.TO_LOCATION, A.dur
+FROM air_flight A JOIN air_flight_details B 
+ON A.FLIGHT_ID = B.FLIGHT_ID AND A.dur < '01:10:00' 
+ORDER BY B.FLIGHT_ID ASC
+
+--GROUP BY A.FLIGHT_ID, B.fdept_date, A.FROM_LOCATION
+
+--29
+
+SELECT B.FLIGHT_ID, A.FROM_LOCATION,A.TO_LOCATION, 
+PRICE AS AVERAGE_PRICE FROM air_flight A, air_flight_details B
+	WHERE (SELECT AVG(PRICE) FROM air_flight_details) > ALL(SELECT AVG(PRICE) 
+	FROM air_flight_details GROUP BY FLIGHT_ID)
+	
+
+
+
